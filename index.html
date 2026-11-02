@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to Use JS HUB</title>
+<meta name="description" content="A plain guide to setting up JS HUB accounting and choosing the right feature for each job.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one working document, map first, then the detail a reader checks it against. */
+:root {
+  --bg: #f6f8fb; --surface: #ffffff; --fg: #15202f; --muted: #566377; --line: #cdd6e2;
+  --accent: #1d4ed8; --accent-soft: #e4edfe; --accent-ink: #1e40af; --warn-soft: #fbf1dc; --warn-ink: #7a5206;
+  --sans: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111720; --surface: #19212d; --fg: #e8edf4; --muted: #a0adbf; --line: #3a4656;
+  --accent: #7ea6ff; --accent-soft: #1d2d4d; --accent-ink: #b3caff; --warn-soft: #3a2e14; --warn-ink: #f0cf8a; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #111720; --surface: #19212d; --fg: #e8edf4; --muted: #a0adbf; --line: #3a4656;
+  --accent: #7ea6ff; --accent-soft: #1d2d4d; --accent-ink: #b3caff; --warn-soft: #3a2e14; --warn-ink: #f0cf8a; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font: 400 16px/1.55 var(--sans); }
+main { max-width: 1040px; margin: 0 auto; padding-block: 40px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 44px; }
+main > * { min-width: 0; }
+h1 { font-size: 2.1rem; line-height: 1.15; margin: 0 0 10px; letter-spacing: -0.01em; text-wrap: balance; }
+h2 { font-size: 1.3rem; margin: 0 0 6px; text-wrap: balance; }
+p { margin: 0; max-width: 68ch; }
+.sub { color: var(--muted); margin-bottom: 18px; }
+header p { color: var(--muted); font-size: 1.08rem; }
+figure { margin: 0; }
+.scroll { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+svg { display: block; width: 100%; min-width: 860px; height: auto; color: var(--fg); }
+figcaption { color: var(--muted); font-size: .92rem; margin-top: 10px; max-width: 72ch; }
+svg text { font-family: var(--sans); fill: currentColor; font-size: 13px; }
+svg .t { font-weight: 600; }
+svg .s { font-size: 11.5px; fill: var(--muted); }
+svg .lane { font-size: 12px; font-weight: 700; letter-spacing: .08em; fill: var(--muted); }
+svg .lab { font-size: 11.5px; fill: var(--muted); }
+svg .draft { fill: var(--surface); stroke: var(--muted); stroke-width: 1.3; stroke-dasharray: 5 4; }
+svg .post { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.6; }
+svg .plain { fill: var(--surface); stroke: var(--line); stroke-width: 1.3; }
+svg .ledger { fill: var(--accent); }
+svg .ledgertext { fill: var(--surface); font-weight: 700; font-size: 14px; }
+svg .ledgersub { fill: var(--surface); font-size: 12px; }
+svg .flow { stroke: currentColor; stroke-width: 1.4; fill: none; }
+svg .rail { stroke: var(--accent); stroke-width: 1.6; fill: none; }
+svg .ah { fill: currentColor; }
+svg .ahb { fill: var(--accent); }
+ol.setup { list-style: none; counter-reset: s; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px 28px; }
+ol.setup li { counter-increment: s; border-top: 2px solid var(--accent); padding-top: 8px; min-width: 0; }
+ol.setup li::before { content: "Step " counter(s); display: block; font: 500 .78rem var(--mono); color: var(--accent-ink); }
+ol.setup b { display: block; }
+ol.setup span { color: var(--muted); font-size: .94rem; }
+.tablewrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+table { border-collapse: collapse; width: 100%; min-width: 720px; font-size: .94rem; }
+th { text-align: left; font-size: .76rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; background: var(--bg); }
+th, td { padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 600; white-space: nowrap; }
+.acct { display: block; font: 500 .84rem/1.5 var(--mono); }
+.group td { background: var(--accent-soft); color: var(--accent-ink); font-size: .78rem; letter-spacing: .06em; text-transform: uppercase; font-weight: 700; padding-block: 6px; }
+.none { color: var(--muted); }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 32px; }
+.cols > * { min-width: 0; }
+ul.plain { margin: 10px 0 0; padding-left: 1.1em; display: grid; gap: 7px; }
+.limits { background: var(--warn-soft); color: var(--warn-ink); padding: 16px 20px; border-radius: 6px; }
+.limits ul { margin: 8px 0 0; padding-left: 1.1em; display: grid; gap: 5px; }
+.limits h2 { font-size: 1.05rem; margin: 0; }
+.jump { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 16px; font-size: .92rem; }
+.jump a, section a { color: var(--accent-ink); }
+table.guide { min-width: 560px; }
+table.guide td:first-child { white-space: normal; font-weight: 400; }
+.note { margin-top: 12px; color: var(--muted); font-size: .94rem; }
+footer { color: var(--muted); font-size: .88rem; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>How to Use JS HUB</h1>
+    <p>Set up your company, follow the workflow, and choose the right feature for each job. For businesses in the UAE and India.</p>
+  <nav class="jump" aria-label="On this page"><a href="#setup">Setup</a><a href="#map">Workflow</a><a href="#finder">Quick finder</a><a href="#sales">Sales</a><a href="#purchases">Purchases</a><a href="#items">Items</a><a href="#banking">Banking</a><a href="#reports">Reports</a><a href="#fix">Fixing mistakes</a></nav>
+  </header>
+
+  <section id="setup">
+    <h2>Set up before your first invoice</h2>
+    <p class="sub">Do these in order. Invoices can only use saved items, so items come before billing.</p>
+    <ol class="setup">
+      <li><b>Company profile</b><span>Legal name, address and tax number. Your invoices and tax returns print these details.</span></li>
+      <li><b>Items</b><span>Everything you sell, with its price, tax rate and, in India, its HSN or SAC code.</span></li>
+      <li><b>Customers and vendors</b><span>Their tax status and location decide how tax applies to them.</span></li>
+      <li><b>Bank and cash</b><span>Add each account with its opening balance, so your cash figures start out right.</span></li>
+    </ol>
+  </section>
+
+  <figure id="map">
+    <div class="scroll">
+    <svg viewBox="0 0 1000 610" role="img" aria-label="Sales and purchases each start as drafts with no accounting effect. Issuing an invoice, recording a bill, payments, credit notes, expenses, transfers and manual journals all post entries to one ledger, and every report reads from that ledger.">
+      <defs>
+        <marker id="a" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto"><path class="ah" d="M0 0 8 4 0 8z"/></marker>
+        <marker id="b" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" orient="auto"><path class="ahb" d="M0 0 8 4 0 8z"/></marker>
+      </defs>
+
+      <!-- Legend -->
+      <rect class="draft" x="620" y="10" width="26" height="15" rx="3"/><text class="s" x="652" y="22">no effect on your books</text>
+      <rect class="post" x="800" y="10" width="26" height="15" rx="3"/><text class="s" x="832" y="22">posts to the ledger</text>
+
+      <!-- SALES -->
+      <text class="lane" x="20" y="22">SALES</text>
+      <path class="flow" d="M90 62V40H480V60" marker-end="url(#a)"/><text class="lab" x="285" y="35" text-anchor="middle">or invoice directly</text>
+      <rect class="plain" x="20" y="62" width="140" height="56" rx="5"/><text class="t" x="90" y="86" text-anchor="middle">Customer + item</text><text class="s" x="90" y="104" text-anchor="middle">set up once</text>
+      <rect class="draft" x="215" y="62" width="140" height="56" rx="5"/><text class="t" x="285" y="86" text-anchor="middle">Quote</text><text class="s" x="285" y="104" text-anchor="middle">sent, accepted, declined</text>
+      <rect class="draft" x="410" y="62" width="140" height="56" rx="5"/><text class="t" x="480" y="86" text-anchor="middle">Invoice draft</text><text class="s" x="480" y="104" text-anchor="middle">still editable</text>
+      <rect class="post" x="605" y="62" width="140" height="56" rx="5"/><text class="t" x="675" y="86" text-anchor="middle">Invoice issued</text><text class="s" x="675" y="104" text-anchor="middle">stock goes down</text>
+      <rect class="post" x="800" y="62" width="140" height="56" rx="5"/><text class="t" x="870" y="86" text-anchor="middle">Payment received</text><text class="s" x="870" y="104" text-anchor="middle">part or full</text>
+      <path class="flow" d="M160 90H213" marker-end="url(#a)"/><text class="lab" x="187" y="83" text-anchor="middle">quote</text>
+      <path class="flow" d="M355 90H408" marker-end="url(#a)"/><text class="lab" x="382" y="83" text-anchor="middle">convert</text>
+      <path class="flow" d="M550 90H603" marker-end="url(#a)"/><text class="lab" x="577" y="83" text-anchor="middle">issue</text>
+      <path class="flow" d="M745 90H798" marker-end="url(#a)"/><text class="lab" x="772" y="83" text-anchor="middle">collect</text>
+
+      <rect class="post" x="605" y="160" width="140" height="56" rx="5"/><text class="t" x="675" y="184" text-anchor="middle">Credit note</text><text class="s" x="675" y="202" text-anchor="middle">can restock, can refund</text>
+      <path class="flow" d="M640 160V120" marker-end="url(#a)"/><text class="lab" x="632" y="144" text-anchor="end">reduces what they owe</text>
+      <path class="rail" d="M710 118V134H975"/><path class="rail" d="M870 118V134"/><path class="rail" d="M745 188H975"/>
+
+      <!-- PURCHASES -->
+      <text class="lane" x="20" y="250">PURCHASES</text>
+      <rect class="plain" x="20" y="266" width="140" height="56" rx="5"/><text class="t" x="90" y="290" text-anchor="middle">Vendor + item</text><text class="s" x="90" y="308" text-anchor="middle">set up once</text>
+      <rect class="draft" x="410" y="266" width="140" height="56" rx="5"/><text class="t" x="480" y="290" text-anchor="middle">Bill draft</text><text class="s" x="480" y="308" text-anchor="middle">vendor's invoice typed in</text>
+      <rect class="post" x="605" y="266" width="140" height="56" rx="5"/><text class="t" x="675" y="290" text-anchor="middle">Bill recorded</text><text class="s" x="675" y="308" text-anchor="middle">stock goes up</text>
+      <rect class="post" x="800" y="266" width="140" height="56" rx="5"/><text class="t" x="870" y="290" text-anchor="middle">Payment made</text><text class="s" x="870" y="308" text-anchor="middle">part or full</text>
+      <path class="flow" d="M160 294H408" marker-end="url(#a)"/><text class="lab" x="285" y="287" text-anchor="middle">enter their invoice</text>
+      <path class="flow" d="M550 294H603" marker-end="url(#a)"/><text class="lab" x="577" y="287" text-anchor="middle">record</text>
+      <path class="flow" d="M745 294H798" marker-end="url(#a)"/><text class="lab" x="772" y="287" text-anchor="middle">pay</text>
+      <path class="rail" d="M675 322V338H975"/><path class="rail" d="M870 322V338"/>
+
+      <!-- MONEY AND ADJUSTMENTS -->
+      <text class="lane" x="20" y="372">OTHER MONEY</text>
+      <rect class="post" x="215" y="388" width="140" height="56" rx="5"/><text class="t" x="285" y="412" text-anchor="middle">Manual journal</text><text class="s" x="285" y="430" text-anchor="middle">capital, corrections</text>
+      <rect class="post" x="410" y="388" width="140" height="56" rx="5"/><text class="t" x="480" y="412" text-anchor="middle">Bank transfer</text><text class="s" x="480" y="430" text-anchor="middle">or opening balance</text>
+      <rect class="post" x="605" y="388" width="140" height="56" rx="5"/><text class="t" x="675" y="412" text-anchor="middle">Expense</text><text class="s" x="675" y="430" text-anchor="middle">paid on the spot, no bill</text>
+      <path class="rail" d="M285 444V460H975"/><path class="rail" d="M480 444V460"/><path class="rail" d="M675 444V460"/>
+
+      <!-- Trunk to the ledger -->
+      <path class="rail" d="M975 134V476" marker-end="url(#b)"/>
+
+      <!-- LEDGER -->
+      <rect class="ledger" x="20" y="478" width="960" height="44" rx="5"/>
+      <text class="ledgertext" x="40" y="505">Ledger</text>
+      <text class="ledgersub" x="100" y="505">one balanced set of debits and credits, per company</text>
+
+      <!-- REPORTS -->
+      <path class="flow" d="M90 522V548" marker-end="url(#a)"/><path class="flow" d="M340 522V548" marker-end="url(#a)"/><path class="flow" d="M590 522V548" marker-end="url(#a)"/><path class="flow" d="M840 522V548" marker-end="url(#a)"/>
+      <text class="lab" x="100" y="539">read by</text>
+      <rect class="plain" x="20" y="550" width="210" height="44" rx="5"/><text class="t" x="125" y="577" text-anchor="middle">Dashboard</text>
+      <rect class="plain" x="270" y="550" width="210" height="44" rx="5"/><text class="t" x="375" y="577" text-anchor="middle">P&amp;L, balance sheet</text>
+      <rect class="plain" x="520" y="550" width="210" height="44" rx="5"/><text class="t" x="625" y="577" text-anchor="middle">Trial balance</text>
+      <rect class="plain" x="770" y="550" width="210" height="44" rx="5"/><text class="t" x="875" y="577" text-anchor="middle">VAT return check</text>
+    </svg>
+    </div>
+    <figcaption>Drafts and quotes never touch your books. Your books change at the blue steps, and the financial reports read from that one ledger. The VAT return is built from your documents and compared with the ledger, so a mismatch shows up. On a phone, swipe the map sideways.</figcaption>
+  </figure>
+
+<section id="finder"><h2>Quick finder</h2><p class="sub">Find what you want to do, then use the feature beside it.</p><div class="tablewrap"><table class="guide"><thead><tr><th>I want to...</th><th>Use</th><th>Find it under</th></tr></thead><tbody><tr><td>Give a customer a price before they commit</td><td>Quote</td><td>Sales</td></tr><tr><td>Charge a customer</td><td>Invoice</td><td>Sales</td></tr><tr><td>Record money a customer paid</td><td>Record payment, on the invoice</td><td>Sales &gt; Invoices</td></tr><tr><td>Reduce or refund a customer's invoice</td><td>Credit note</td><td>Sales</td></tr><tr><td>Enter an invoice a vendor sent me</td><td>Bill</td><td>Purchases</td></tr><tr><td>Record money I paid a vendor</td><td>Record payment, on the bill</td><td>Purchases &gt; Bills</td></tr><tr><td>Record spending with no vendor invoice to track</td><td>Expense</td><td>Purchases</td></tr><tr><td>Add something I sell or buy</td><td>Item</td><td>Business</td></tr><tr><td>Move money between my own accounts</td><td>Transfer</td><td>Business &gt; Banking</td></tr><tr><td>Match my books to a bank statement</td><td>Reconcile</td><td>Business &gt; Banking</td></tr><tr><td>Record owner capital, depreciation or an accrual</td><td>Manual journal</td><td>Business &gt; Accounting</td></tr><tr><td>See who owes me money</td><td>Receivables aging</td><td>Business &gt; Reports</td></tr><tr><td>See who I owe money to</td><td>Payables aging</td><td>Business &gt; Reports</td></tr><tr><td>See whether I made a profit</td><td>Profit &amp; loss</td><td>Business &gt; Reports</td></tr><tr><td>Prepare my tax filing</td><td>VAT return, or GSTR-1 and GSTR-3B</td><td>Business &gt; Reports</td></tr><tr><td>Change my company name, address or tax number</td><td>Company profile</td><td>Business</td></tr></tbody></table></div></section>
+<section id="sales"><h2>Sales</h2><p class="sub">Use a quote while the customer is still deciding, and an invoice once they owe you. Only issued invoices change your books.</p><div class="tablewrap"><table class="guide"><thead><tr><th>Feature</th><th>Use it when</th><th>Don't use it when</th></tr></thead><tbody><tr><td><b>Quote</b></td><td>You're offering a price the customer can accept or decline.</td><td>The customer already owes you. Create an invoice.</td></tr><tr><td><b>Invoice draft</b></td><td>You're still preparing an invoice and may change it.</td><td>The invoice is final. Issue it.</td></tr><tr><td><b>Issue invoice</b></td><td>The invoice is final. This records the sale and tax, and takes tracked goods out of stock.</td><td>You don't have enough stock. The app stops you until stock is recorded.</td></tr><tr><td><b>Record payment</b></td><td>A customer paid all or part of an invoice.</td><td>The invoice is still a draft. Issue it first.</td></tr><tr><td><b>Credit note</b></td><td>You need to reduce an issued invoice for a return, refund or correction.</td><td>The whole invoice was a mistake with nothing paid or credited. Void it instead.</td></tr></tbody></table></div><p class="note">Every invoice, quote and credit note line uses a saved item. For a saved service, you can enter start and end dates, which print on the document.</p></section>
+<section id="purchases"><h2>Purchases</h2><p class="sub">Use a bill when a vendor invoices you. Use an expense when you've already paid and there's no bill to track.</p><div class="tablewrap"><table class="guide"><thead><tr><th>Feature</th><th>Use it when</th><th>Don't use it when</th></tr></thead><tbody><tr><td><b>Bill</b></td><td>A vendor sent an invoice, especially if you're buying stock or paying later.</td><td>You've paid on the spot for something small. Use an expense.</td></tr><tr><td><b>Record payment</b></td><td>You paid all or part of a recorded bill.</td><td>There's no bill yet.</td></tr><tr><td><b>Expense</b></td><td>You paid straight away for something like fuel, rent or bank charges.</td><td>You're buying tracked stock. Expenses don't add to stock, so use a bill.</td></tr><tr><td><b>Paid by the owner</b></td><td>The owner paid an expense personally. Choose the owner's equity account under Paid from.</td><td>The company paid. Choose its bank or cash account.</td></tr></tbody></table></div></section>
+<section id="items"><h2>Items and stock</h2><p class="sub">Create one item for each product or service you sell. Its description, price and tax code fill in on each line.</p><div class="tablewrap"><table class="guide"><thead><tr><th>Choice</th><th>Use it when</th></tr></thead><tbody><tr><td><b>Goods, stock tracked</b></td><td>You hold physical stock and want quantities and cost of goods sold updated automatically.</td></tr><tr><td><b>Goods, not tracked</b></td><td>You sell a physical product but don't count it.</td></tr><tr><td><b>Service</b></td><td>You sell work or time. Its lines can show start and end dates.</td></tr><tr><td><b>HSN or SAC code</b></td><td>You're in India. Save the code on the item, because invoice lines don't ask for it.</td></tr><tr><td><b>Opening stock</b></td><td>You already hold the goods when you start using JS HUB.</td></tr></tbody></table></div></section>
+<section id="banking"><h2>Banking and accounting</h2><p class="sub">Use Banking for money moving through your accounts, and a manual journal only when no other feature fits.</p><div class="tablewrap"><table class="guide"><thead><tr><th>Feature</th><th>Use it when</th><th>Don't use it when</th></tr></thead><tbody><tr><td><b>Transfer</b></td><td>Money moved between two of your own accounts, such as bank to petty cash.</td><td>Money went to a vendor or came from a customer. Record a payment.</td></tr><tr><td><b>Reconcile</b></td><td>You have a bank statement and want to confirm your books match it.</td><td>You're still changing those entries.</td></tr><tr><td><b>Chart of accounts</b></td><td>You need a new category, like a specific expense type.</td><td>You just want to label a single transaction. Use its description.</td></tr><tr><td><b>Manual journal</b></td><td>You're recording owner capital, depreciation, accruals or a correction.</td><td>It's a sale, purchase or stock movement.</td></tr></tbody></table></div></section>
+<section id="reports"><h2>Reports and tax</h2><p class="sub">Pick the report by the question you're asking.</p><div class="tablewrap"><table class="guide"><thead><tr><th>Question</th><th>Report</th></tr></thead><tbody><tr><td>Did we make a profit in this period?</td><td>Profit &amp; loss</td></tr><tr><td>What do we own and owe on this date?</td><td>Balance sheet</td></tr><tr><td>Do the accounts balance?</td><td>Trial balance</td></tr><tr><td>Which customers are late paying?</td><td>Receivables aging</td></tr><tr><td>Which vendors do we need to pay?</td><td>Payables aging</td></tr><tr><td>How much VAT do we owe this UAE tax period?</td><td>VAT return</td></tr><tr><td>What goes on my Indian GST returns?</td><td>GSTR-1 and GSTR-3B</td></tr></tbody></table></div><p class="note">Have your accountant review a tax report before you file it. JS HUB prepares the figures, and filing them is up to you.</p></section>
+<section id="mixups"><h2>Common mix-ups</h2><p class="sub">These four choices cause the most confusion.</p><div class="tablewrap"><table class="guide"><thead><tr><th>Choosing between</th><th>Use the first when</th><th>Use the second when</th></tr></thead><tbody><tr><td><b>Quote or invoice</b></td><td>The customer hasn't agreed yet</td><td>The customer owes you</td></tr><tr><td><b>Bill or expense</b></td><td>A vendor invoiced you, you'll pay later, or it's stock</td><td>You've already paid and it isn't tracked stock</td></tr><tr><td><b>Void or credit note</b></td><td>The invoice shouldn't exist at all</td><td>The invoice was valid but needs reducing or refunding</td></tr><tr><td><b>Transfer or manual journal</b></td><td>Money moved between your own accounts</td><td>You're recording something else, like capital or depreciation</td></tr></tbody></table></div></section>
+
+
+  <section>
+    <h2>What each step does to your books</h2>
+    <p class="sub">You never type these entries. The app posts them when you take the step.</p>
+    <div class="tablewrap">
+    <table>
+      <thead><tr><th>Step</th><th>Debit (goes up, or owed to you)</th><th>Credit (comes from, or you owe)</th><th>Also happens</th></tr></thead>
+      <tbody>
+        <tr class="group"><td colspan="4">Sales</td></tr>
+        <tr><td>Quote, invoice draft</td><td class="none" colspan="2">Nothing posted</td><td>A quote can convert to an invoice draft, keeping its lines and service dates.</td></tr>
+        <tr><td>Issue invoice</td><td><span class="acct">Customers owe you</span><span class="acct">Cost of goods sold</span></td><td><span class="acct">Sales</span><span class="acct">Tax payable</span><span class="acct">Inventory</span></td><td>Tracked stock goes down. The app stops you if there isn't enough stock.</td></tr>
+        <tr><td>Receive payment</td><td><span class="acct">Bank or cash</span></td><td><span class="acct">Customers owe you</span></td><td>Invoice becomes part paid or paid.</td></tr>
+        <tr><td>Issue credit note</td><td><span class="acct">Sales</span><span class="acct">Tax payable</span></td><td><span class="acct">Customers owe you</span></td><td>Applied to the invoice. Can return goods to stock at cost.</td></tr>
+        <tr><td>Refund a credit</td><td><span class="acct">Customers owe you</span></td><td><span class="acct">Bank or cash</span></td><td>Credit note closes once fully used.</td></tr>
+        <tr class="group"><td colspan="4">Purchases</td></tr>
+        <tr><td>Bill draft</td><td class="none" colspan="2">Nothing posted</td><td>A vendor's bill number can only be entered once, which helps prevent paying twice.</td></tr>
+        <tr><td>Record bill</td><td><span class="acct">Inventory or expense</span><span class="acct">Tax recoverable</span></td><td><span class="acct">You owe vendors</span></td><td>Tracked stock goes up and its average cost updates.</td></tr>
+        <tr><td>Make payment</td><td><span class="acct">You owe vendors</span></td><td><span class="acct">Bank or cash</span></td><td>Bill becomes part paid or paid.</td></tr>
+        <tr><td>Record expense</td><td><span class="acct">Expense account</span><span class="acct">Tax recoverable</span></td><td><span class="acct">Bank, cash or owner's equity</span></td><td>Use for spending with no bill, like fuel or bank charges.</td></tr>
+        <tr class="group"><td colspan="4">Other money</td></tr>
+        <tr><td>Bank transfer</td><td><span class="acct">Receiving account</span></td><td><span class="acct">Sending account</span></td><td>Total cash and bank doesn't change.</td></tr>
+        <tr><td>Manual journal</td><td class="none" colspan="2">The accounts you choose, which must balance</td><td>For owner capital, depreciation and corrections. Customer, vendor and stock balances can't be changed this way.</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section class="cols" id="fix">
+    <div>
+      <h2>Your regular routine</h2>
+      <ul class="plain">
+        <li><b>Daily:</b> issue invoices, record bills and expenses, and enter money in and out.</li>
+        <li><b>Weekly:</b> check the receivables aging to chase overdue invoices, and the payables aging to plan payments.</li>
+        <li><b>Monthly:</b> reconcile each bank account against its statement. Reconciled entries lock.</li>
+        <li><b>Each tax period:</b> file the VAT return in the UAE, or GSTR-1 and GSTR-3B in India.</li>
+      </ul>
+    </div>
+    <div>
+      <h2>Fixing mistakes</h2>
+      <ul class="plain">
+        <li><b>Drafts:</b> edit or delete them freely.</li>
+        <li><b>Issued invoices and recorded bills:</b> void them. The app posts a reversing entry and keeps the original for your records.</li>
+        <li><b>If it has payments or credits:</b> delete the payments first. On an invoice, also void its credit notes first.</li>
+        <li><b>Reducing or refunding a valid sale:</b> issue a credit note instead of voiding.</li>
+      </ul>
+    </div>
+  </section>
+  <footer>Guide for JS HUB. Features can change as the app develops.</footer>
+</main>
+</body>
+</html>
